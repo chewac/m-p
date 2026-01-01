@@ -1,4 +1,4 @@
-// Copyright 2023 The MediaPipe Authors.
+ // Copyright 2023 The MediaPipe Authors.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -184,52 +184,55 @@ async function predictWebcam() {
     window.requestAnimationFrame(predictWebcam);
 }
 function displayVideoDetections(result) {
-    // Remove any highlighting from previous frame.
-    for (let child of children) {
-        liveView.removeChild(child);
-    }
-    children.splice(0);
-    // Iterate through predictions and draw them to the live view
-    for (let detection of result.detections) {
-        const p = document.createElement("p");
-        p.innerText =
-            detection.categories[0].categoryName +
-                " - with " +
-                Math.round(parseFloat(detection.categories[0].score) * 100) +
-                "% confidence.";
-        p.style =
-            "left: " +
-                (video.offsetWidth -
-                    detection.boundingBox.width -
-                    detection.boundingBox.originX) +
-                "px;" +
-                "top: " +
-                detection.boundingBox.originY +
-                "px; " +
-                "width: " +
-                (detection.boundingBox.width - 10) +
-                "px;";
-        const highlighter = document.createElement("div");
-        highlighter.setAttribute("class", "highlighter");
-        highlighter.style =
-            "left: " +
-                (video.offsetWidth -
-                    detection.boundingBox.width -
-                    detection.boundingBox.originX) +
-                "px;" +
-                "top: " +
-                detection.boundingBox.originY +
-                "px;" +
-                "width: " +
-                (detection.boundingBox.width - 10) +
-                "px;" +
-                "height: " +
-                detection.boundingBox.height +
-                "px;";
-        liveView.appendChild(highlighter);
-        liveView.appendChild(p);
-        // Store drawn objects in memory so they are queued to delete at next call.
-        children.push(highlighter);
-        children.push(p);
-    }
+  for (let child of children) {
+    liveView.removeChild(child);
+  }
+  children.length = 0;
+
+  for (let detection of result.detections) {
+    const label = document.createElement("p");
+
+    label.textContent =
+      detection.categories[0].categoryName +
+      " " +
+      Math.round(detection.categories[0].score * 100) +
+      "%";
+
+    label.style.left =
+      video.offsetWidth -
+      detection.boundingBox.width -
+      detection.boundingBox.originX +
+      "px";
+
+    label.style.top =
+      detection.boundingBox.originY -
+      34 +
+      "px";
+
+    label.style.width =
+      detection.boundingBox.width + "px";
+
+    const box = document.createElement("div");
+    box.className = "highlighter";
+
+    box.style.left =
+      video.offsetWidth -
+      detection.boundingBox.width -
+      detection.boundingBox.originX +
+      "px";
+
+    box.style.top =
+      detection.boundingBox.originY + "px";
+
+    box.style.width =
+      detection.boundingBox.width + "px";
+
+    box.style.height =
+      detection.boundingBox.height + "px";
+
+    liveView.appendChild(box);
+    liveView.appendChild(label);
+
+    children.push(box, label);
+  }
 }
