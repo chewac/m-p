@@ -1,5 +1,7 @@
 {
   "name": "x",
   "compatibility_date": "2026-01-01",
-  "main": "index.html" 
+  "assets": {
+    "directory": "."
+  }
 }
