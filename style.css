@@ -36,6 +36,8 @@ em {
 video {
   clear: both;
   display: block;
+  width: 100%;
+  max-width: 1280px;
 }
 
 section {
@@ -43,46 +45,96 @@ section {
   transition: opacity 500ms ease-in-out;
 }
 
-.mdc-button.mdc-button--raised.removed {
-  display: none;
-}
-
 .invisible {
   opacity: 0.2;
 }
 
-.videoView,
-.detectOnClick {
+.videoView {
   position: relative;
-  float: left;
-  width: 48%;
-  margin: 2% 1%;
-  cursor: pointer;
+  width: 100%;
+  margin: 2% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.detectOnClick p {
+/* Big button 50% width centered */
+#webcamButton {
+  width: 50%;
+  margin: 20px auto;
+  padding: 15px;
+  font-size: 1.2rem;
+  display: block;
+}
+
+/* Toggle Switch Styles */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #007f8b;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* Detection labels: Helvetica 14pt */
+.videoView p, .detectOnClick p {
   position: absolute;
   padding: 5px;
   background-color: #007f8b;
   color: #fff;
-  border: 1px dashed rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   z-index: 2;
-  font-size: 12px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 14pt;
   margin: 0;
-}
-
-.videoView p {
-  position: absolute;
-  padding: 10px 14px;
-  background-color: #007f8b;
-  color: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  z-index: 2;
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 1.3;
-  margin: 0;
-  border-radius: 6px;
+  border-radius: 4px;
+  pointer-events: none;
 }
 
 .highlighter {
@@ -90,10 +142,15 @@ section {
   border: 3px solid #00ff00;
   z-index: 1;
   position: absolute;
+  pointer-events: none;
 }
 
-
 .detectOnClick {
+  position: relative;
+  float: left;
+  width: 48%;
+  margin: 2% 1%;
+  cursor: pointer;
   z-index: 0;
 }
 

@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Object Detection</title>
   <link rel="stylesheet" href="./style.css">
-
 </head>
 <body>
 
@@ -12,17 +11,28 @@
 <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 
 <section id="demos" class="invisible">
-  
   <div id="liveView" class="videoView">
+    <!-- Camera Toggle: Rear (Left) / Front (Right) -->
+    <div class="toggle-container">
+      <span>Rear</span>
+      <label class="switch">
+        <input type="checkbox" id="cameraToggle">
+        <span class="slider"></span>
+      </label>
+      <span>Front</span>
+    </div>
+
+    <!-- Big button 50% width -->
     <button id="webcamButton" class="mdc-button mdc-button--raised">
       <span class="mdc-button__ripple"></span>
-      <span class="mdc-button__label">ENABLE WEBCAM</span>
+      <span class="mdc-button__label">CAMERA ON/OFF</span>
     </button>
+
     <video id="webcam" autoplay playsinline></video>
   </div>
 </section>
-<!-- partial -->
-  <script type="module" src="./script.js"></script>
+
+<script type="module" src="./script.js"></script>
 
 </body>
 </html>

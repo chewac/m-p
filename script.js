@@ -1,4 +1,4 @@
- // Copyright 2023 The MediaPipe Authors.
+// Copyright 2023 The MediaPipe Authors.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -8,10 +8,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { ObjectDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2";
+
 const demosSection = document.getElementById("demos");
 let objectDetector;
 let runningMode = "IMAGE";
+
 // Initialize the object detector
 const initializeObjectDetector = async () => {
     const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
@@ -26,213 +29,149 @@ const initializeObjectDetector = async () => {
     demosSection.classList.remove("invisible");
 };
 initializeObjectDetector();
-/********************************************************************
- // Demo 1: Grab a bunch of images from the page and detection them
- // upon click.
- ********************************************************************/
-const imageContainers = document.getElementsByClassName("detectOnClick");
-for (let imageContainer of imageContainers) {
-    imageContainer.children[0].addEventListener("click", handleClick);
-}
-/**
- * Detect objects in still images on click
- */
-async function handleClick(event) {
-    const highlighters = event.target.parentNode.getElementsByClassName("highlighter");
-    while (highlighters[0]) {
-        highlighters[0].parentNode.removeChild(highlighters[0]);
-    }
-    const infos = event.target.parentNode.getElementsByClassName("info");
-    while (infos[0]) {
-        infos[0].parentNode.removeChild(infos[0]);
-    }
-    if (!objectDetector) {
-        alert("Object Detector is still loading. Please try again.");
-        return;
-    }
-    // if video mode is initialized, set runningMode to image
-    if (runningMode === "VIDEO") {
-        runningMode = "IMAGE";
-        await objectDetector.setOptions({ runningMode: "IMAGE" });
-    }
-    const ratio = event.target.height / event.target.naturalHeight;
-    // objectDetector.detect returns a promise which, when resolved, is an array of Detection objects
-    const detections = objectDetector.detect(event.target);
-    displayImageDetections(detections, event.target);
-}
-function displayImageDetections(result, resultElement) {
-    const ratio = resultElement.height / resultElement.naturalHeight;
-    console.log(ratio);
-    for (let detection of result.detections) {
-        // Description text
-        const p = document.createElement("p");
-        p.setAttribute("class", "info");
-        p.innerText =
-            detection.categories[0].categoryName +
-                " - with " +
-                Math.round(parseFloat(detection.categories[0].score) * 100) +
-                "% confidence.";
-        // Positioned at the top left of the bounding box.
-        // Height is whatever the text takes up.
-        // Width subtracts text padding in CSS so fits perfectly.
-        p.style =
-            "left: " +
-                detection.boundingBox.originX * ratio +
-                "px;" +
-                "top: " +
-                detection.boundingBox.originY * ratio +
-                "px; " +
-                "width: " +
-                (detection.boundingBox.width * ratio - 10) +
-                "px;";
-        const highlighter = document.createElement("div");
-        highlighter.setAttribute("class", "highlighter");
-        highlighter.style =
-            "left: " +
-                detection.boundingBox.originX * ratio +
-                "px;" +
-                "top: " +
-                detection.boundingBox.originY * ratio +
-                "px;" +
-                "width: " +
-                detection.boundingBox.width * ratio +
-                "px;" +
-                "height: " +
-                detection.boundingBox.height * ratio +
-                "px;";
-        resultElement.parentNode.appendChild(highlighter);
-        resultElement.parentNode.appendChild(p);
-    }
-}
+
 /********************************************************************
  // Demo 2: Continuously grab image from webcam stream and detect it.
  ********************************************************************/
+
 let video = document.getElementById("webcam");
 const liveView = document.getElementById("liveView");
-let enableWebcamButton;
+const enableWebcamButton = document.getElementById("webcamButton");
+const cameraToggle = document.getElementById("cameraToggle");
+
+let webcamRunning = false;
+let children = [];
+
 // Check if webcam access is supported.
 function hasGetUserMedia() {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 }
-// Keep a reference of all the child elements we create
-// so we can remove them easilly on each render.
-var children = [];
-// If webcam supported, add event listener to button for when user
-// wants to activate it.
+
 if (hasGetUserMedia()) {
-    enableWebcamButton = document.getElementById("webcamButton");
-    enableWebcamButton.addEventListener("click", enableCam);
-}
-else {
+    enableWebcamButton.addEventListener("click", toggleCam);
+} else {
     console.warn("getUserMedia() is not supported by your browser");
 }
-// Enable the live webcam view and start detection.
-async function enableCam(event) {
+
+async function toggleCam() {
     if (!objectDetector) {
         console.log("Wait! objectDetector not loaded yet.");
         return;
     }
-    // Hide the button.
-    enableWebcamButton.classList.add("removed");
-    // getUsermedia parameters
-    const constraints = {
-  video: {
-    width: {
-      min: 1280,
-      ideal: 1920,
-      max: 2560,
-    },
-    height: {
-      min: 720,
-      ideal: 1080,
-      max: 1440
-    },
-    facingMode: {
-      exact: 'environment'
-    }
-  }
 
+    if (webcamRunning === true) {
+        webcamRunning = false;
+        enableWebcamButton.querySelector('.mdc-button__label').innerText = "CAMERA ON/OFF";
         
+        // Stop the stream
+        const stream = video.srcObject;
+        if (stream) {
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+        }
+        video.srcObject = null;
+        
+        // Clear detections
+        for (let child of children) {
+            liveView.removeChild(child);
+        }
+        children = [];
+    } else {
+        webcamRunning = true;
+        enableWebcamButton.querySelector('.mdc-button__label').innerText = "STOP CAMERA";
+        await startCam();
+    }
+}
+
+async function startCam() {
+    // Determine facing mode based on toggle: checked = front (user), unchecked = rear (environment)
+    const facingMode = cameraToggle.checked ? 'user' : 'environment';
+    
+    const constraints = {
+        video: {
+            facingMode: facingMode
+        }
     };
+
     // Activate the webcam stream.
-    navigator.mediaDevices
-        .getUserMedia(constraints)
-        .then(function (stream) {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
         video.addEventListener("loadeddata", predictWebcam);
-    })
-        .catch((err) => {
-        console.error(err);
-        /* handle the error */
-    });
+    } catch (err) {
+        console.error("Error accessing webcam: ", err);
+        webcamRunning = false;
+        enableWebcamButton.querySelector('.mdc-button__label').innerText = "CAMERA ON/OFF";
+    }
 }
+
+// Handle camera switch while running
+cameraToggle.addEventListener('change', async () => {
+    if (webcamRunning) {
+        // Stop current stream
+        const stream = video.srcObject;
+        if (stream) {
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+        }
+        // Restart with new facing mode
+        await startCam();
+    }
+});
+
 let lastVideoTime = -1;
 async function predictWebcam() {
+    if (!webcamRunning) return;
+
     // if image mode is initialized, create a new classifier with video runningMode.
     if (runningMode === "IMAGE") {
         runningMode = "VIDEO";
         await objectDetector.setOptions({ runningMode: "VIDEO" });
     }
+    
     let startTimeMs = performance.now();
+
     // Detect objects using detectForVideo.
     if (video.currentTime !== lastVideoTime) {
         lastVideoTime = video.currentTime;
         const detections = objectDetector.detectForVideo(video, startTimeMs);
         displayVideoDetections(detections);
     }
+
     // Call this function again to keep predicting when the browser is ready.
     window.requestAnimationFrame(predictWebcam);
 }
+
 function displayVideoDetections(result) {
-  for (let child of children) {
-    liveView.removeChild(child);
-  }
-  children.length = 0;
+    // Remove previous highlights
+    for (let child of children) {
+        liveView.removeChild(child);
+    }
+    children = [];
 
-  for (let detection of result.detections) {
-    const label = document.createElement("p");
+    for (let detection of result.detections) {
+        const label = document.createElement("p");
 
-    label.textContent =
-      detection.categories[0].categoryName +
-      " " +
-      Math.round(detection.categories[0].score * 100) +
-      "%";
+        label.textContent =
+            detection.categories[0].categoryName +
+            " " +
+            Math.round(detection.categories[0].score * 100) +
+            "%";
 
-    label.style.left =
-      video.offsetWidth -
-      detection.boundingBox.width -
-      detection.boundingBox.originX +
-      "px";
+        // Position the label
+        label.style.left = detection.boundingBox.originX + "px";
+        label.style.top = (detection.boundingBox.originY - 30) + "px";
+        label.style.width = (detection.boundingBox.width - 10) + "px";
 
-    label.style.top =
-      detection.boundingBox.originY -
-      34 +
-      "px";
+        const box = document.createElement("div");
+        box.className = "highlighter";
+        box.style.left = detection.boundingBox.originX + "px";
+        box.style.top = detection.boundingBox.originY + "px";
+        box.style.width = detection.boundingBox.width + "px";
+        box.style.height = detection.boundingBox.height + "px";
 
-    label.style.width =
-      detection.boundingBox.width + "px";
-
-    const box = document.createElement("div");
-    box.className = "highlighter";
-
-    box.style.left =
-      video.offsetWidth -
-      detection.boundingBox.width -
-      detection.boundingBox.originX +
-      "px";
-
-    box.style.top =
-      detection.boundingBox.originY + "px";
-
-    box.style.width =
-      detection.boundingBox.width + "px";
-
-    box.style.height =
-      detection.boundingBox.height + "px";
-
-    liveView.appendChild(box);
-    liveView.appendChild(label);
-
-    children.push(box, label);
-  }
+        liveView.appendChild(box);
+        liveView.appendChild(label);
+        children.push(box, label);
+    }
 }
