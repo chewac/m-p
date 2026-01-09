@@ -1,28 +1,31 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Object Detection</title>
-  <link rel="stylesheet" href="./style.css">
 
+  <link rel="stylesheet" href="./style.css">
+  <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
 </head>
+
 <body>
 
-<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
 <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 
 <section id="demos" class="invisible">
-  
   <div id="liveView" class="videoView">
-    <button id="webcamButton" class="mdc-button mdc-button--raised">
-      <span class="mdc-button__ripple"></span>
-      <span class="mdc-button__label">ENABLE WEBCAM</span>
+
+    <button id="webcamButton"
+            class="mdc-button mdc-button--raised camera-button">
+      <span class="camera-power-icon"></span>
+      <span class="camera-button-text">TURN ON CAMERA</span>
     </button>
+
     <video id="webcam" autoplay playsinline></video>
   </div>
 </section>
-<!-- partial -->
-  <script type="module" src="./script.js"></script>
+
+<script type="module" src="./script.js"></script>
 
 </body>
 </html>
