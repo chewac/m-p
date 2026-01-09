@@ -1,13 +1,4 @@
-// Copyright 2023 The MediaPipe Authors.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//      http://www.apache.org/licenses/LICENSE-2.0
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+
 import { ObjectDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2";
 const demosSection = document.getElementById("demos");
 let objectDetector;
@@ -184,40 +175,52 @@ async function predictWebcam() {
     window.requestAnimationFrame(predictWebcam);
 }
 function displayVideoDetections(result) {
-  for (let child of children) {
-    liveView.removeChild(child);
-  }
-  children.length = 0;
-
-  for (let detection of result.detections) {
-    if (detection.categories[0].score < 0.6) continue;
-
-    const bb = detection.boundingBox;
-    const left = video.offsetWidth - bb.width - bb.originX;
-
-    const box = document.createElement("div");
-    box.className = "highlighter glitch";
-
-    box.style.left = left + "px";
-    box.style.top = bb.originY + "px";
-    box.style.width = bb.width + "px";
-    box.style.height = bb.height + "px";
-
-    const label = document.createElement("p");
-    label.textContent =
-      detection.categories[0].categoryName +
-      " " +
-      Math.round(detection.categories[0].score * 100) +
-      "%";
-
-    label.style.left = left + "px";
-    label.style.top = (bb.originY - 40) + "px";
-    label.style.width = bb.width + "px";
-
-    liveView.appendChild(box);
-    liveView.appendChild(label);
-
-    children.push(box, label);
-  }
+    // Remove any highlighting from previous frame.
+    for (let child of children) {
+        liveView.removeChild(child);
+    }
+    children.splice(0);
+    // Iterate through predictions and draw them to the live view
+    for (let detection of result.detections) {
+        const p = document.createElement("p");
+        p.innerText =
+            detection.categories[0].categoryName +
+                " - with " +
+                Math.round(parseFloat(detection.categories[0].score) * 100) +
+                "% confidence.";
+        p.style =
+            "left: " +
+                (video.offsetWidth -
+                    detection.boundingBox.width -
+                    detection.boundingBox.originX) +
+                "px;" +
+                "top: " +
+                detection.boundingBox.originY +
+                "px; " +
+                "width: " +
+                (detection.boundingBox.width - 10) +
+                "px;";
+        const highlighter = document.createElement("div");
+        highlighter.setAttribute("class", "highlighter");
+        highlighter.style =
+            "left: " +
+                (video.offsetWidth -
+                    detection.boundingBox.width -
+                    detection.boundingBox.originX) +
+                "px;" +
+                "top: " +
+                detection.boundingBox.originY +
+                "px;" +
+                "width: " +
+                (detection.boundingBox.width - 10) +
+                "px;" +
+                "height: " +
+                detection.boundingBox.height +
+                "px;";
+        liveView.appendChild(highlighter);
+        liveView.appendChild(p);
+        // Store drawn objects in memory so they are queued to delete at next call.
+        children.push(highlighter);
+        children.push(p);
+    }
 }
-
