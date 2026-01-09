@@ -184,52 +184,40 @@ async function predictWebcam() {
     window.requestAnimationFrame(predictWebcam);
 }
 function displayVideoDetections(result) {
-    // Remove any highlighting from previous frame.
-    for (let child of children) {
-        liveView.removeChild(child);
-    }
-    children.splice(0);
-    // Iterate through predictions and draw them to the live view
-    for (let detection of result.detections) {
-        const p = document.createElement("p");
-        p.innerText =
-            detection.categories[0].categoryName +
-                " - with " +
-                Math.round(parseFloat(detection.categories[0].score) * 100) +
-                "% confidence.";
-        p.style =
-            "left: " +
-                (video.offsetWidth -
-                    detection.boundingBox.width -
-                    detection.boundingBox.originX) +
-                "px;" +
-                "top: " +
-                detection.boundingBox.originY +
-                "px; " +
-                "width: " +
-                (detection.boundingBox.width - 10) +
-                "px;";
-        const highlighter = document.createElement("div");
-        highlighter.setAttribute("class", "highlighter");
-        highlighter.style =
-            "left: " +
-                (video.offsetWidth -
-                    detection.boundingBox.width -
-                    detection.boundingBox.originX) +
-                "px;" +
-                "top: " +
-                detection.boundingBox.originY +
-                "px;" +
-                "width: " +
-                (detection.boundingBox.width - 10) +
-                "px;" +
-                "height: " +
-                detection.boundingBox.height +
-                "px;";
-        liveView.appendChild(highlighter);
-        liveView.appendChild(p);
-        // Store drawn objects in memory so they are queued to delete at next call.
-        children.push(highlighter);
-        children.push(p);
-    }
+  for (let child of children) {
+    liveView.removeChild(child);
+  }
+  children.length = 0;
+
+  for (let detection of result.detections) {
+    if (detection.categories[0].score < 0.6) continue;
+
+    const bb = detection.boundingBox;
+    const left = video.offsetWidth - bb.width - bb.originX;
+
+    const box = document.createElement("div");
+    box.className = "highlighter glitch";
+
+    box.style.left = left + "px";
+    box.style.top = bb.originY + "px";
+    box.style.width = bb.width + "px";
+    box.style.height = bb.height + "px";
+
+    const label = document.createElement("p");
+    label.textContent =
+      detection.categories[0].categoryName +
+      " " +
+      Math.round(detection.categories[0].score * 100) +
+      "%";
+
+    label.style.left = left + "px";
+    label.style.top = (bb.originY - 40) + "px";
+    label.style.width = bb.width + "px";
+
+    liveView.appendChild(box);
+    liveView.appendChild(label);
+
+    children.push(box, label);
+  }
 }
+
