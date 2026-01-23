@@ -1,8 +1,8 @@
 
 @use "@material";
 body {
-  font-family: roboto;
-  margin: 0.5em;
+  font-family: courier;
+  margin: 0.1em;
   color: #3d3d3d;
   --mdc-theme-primary: #007f8b;
   --mdc-theme-on-primary: #f1f3f4;
@@ -66,7 +66,8 @@ section {
   color: #fff;
   border: 1px dashed rgba(255, 255, 255, 0.7);
   z-index: 2;
-  font-size: 14px;
+  font-size: 24px;
+  font-weight: bold;
   margin: 0;
 }
 
