@@ -11,7 +11,7 @@ const initializeObjectDetector = async () => {
             modelAssetPath: `https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite`,
             delegate: "GPU"
         },
-        scoreThreshold: 0.9,
+        scoreThreshold: 1,
         runningMode: runningMode
     });
     demosSection.classList.remove("invisible");
